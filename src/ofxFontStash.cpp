@@ -128,7 +128,7 @@ void ofxFontStash::drawMultiLine( string text, float size, float x, float y){
 
 ofRectangle ofxFontStash::drawMultiLineColumn( string & text, float size, float x, float y,
 											  float maxW, int &numLines, bool dontDraw, int maxLines,
-											  bool giveBackNewLinedText, bool* wordsWereTruncated){
+											  bool giveBackNewLinedText, TextAlign::ENUM textAlign, bool* wordsWereTruncated){
 
 	ofRectangle totalArea = ofRectangle(x,y,0,0);
 
@@ -207,6 +207,16 @@ ofRectangle ofxFontStash::drawMultiLineColumn( string & text, float size, float 
         }
 
 		if(!dontDraw) beginBatch();
+        int ei = 0;
+        while(ei < splitLines.size()){
+            string l = splitLines[ei];
+            if(l.length() == 0 || l == " " || l == "\n"){
+                splitLines.erase(splitLines.begin()+ei);
+            }
+            else{
+                ei++;
+            }
+        }
 		numLines = splitLines.size();
 		int linesToDraw = 0;
 		if (maxLines > 0 ){
@@ -217,18 +227,33 @@ ofRectangle ofxFontStash::drawMultiLineColumn( string & text, float size, float 
 		}
 
 		for(int i = 0; i < linesToDraw; i++){
-			float yy = lineHeight * OFX_FONT_STASH_LINE_HEIGHT_MULT * size * i;
+            float yy = lineHeight * OFX_FONT_STASH_LINE_HEIGHT_MULT * size * i;
+#if OF_VERSION_MAJOR == 0 && OF_VERSION_MINOR >= 8
+            totalArea = totalArea.getUnion( getBBox(splitLines[i], size, x, y + yy));
+#else
+            totalArea = getBBox(splitLines[i], size, x, y + yy); //TODO!
+#endif
+        }
+        for(int i = 0; i < linesToDraw; i++){
+            float yy = lineHeight * OFX_FONT_STASH_LINE_HEIGHT_MULT * size * i;
 			if(!dontDraw){
 				ofPushMatrix();
 				ofTranslate(0, yy);
-				drawBatch(splitLines[i], size, 0, 0 );
+                float lw = getBBox(splitLines[i], size, 0, 0).getWidth();
+                float xOffset;
+                switch(textAlign){
+                    case TextAlign::MIDDLE:
+                        xOffset = totalArea.getWidth()/2.0f-lw/2.0f;
+                        break;
+                    case TextAlign::RIGHT:
+                        xOffset = totalArea.getWidth()-lw;
+                        break;
+                    default:
+                        xOffset = 0.0;
+                }
+				drawBatch(splitLines[i], size, xOffset, 0 );
 				ofPopMatrix();
 			}
-			#if OF_VERSION_MAJOR == 0 && OF_VERSION_MINOR >= 8
-			totalArea = totalArea.getUnion( getBBox(splitLines[i], size, x, y + yy));
-			#else
-			totalArea = getBBox(splitLines[i], size, x, y + yy); //TODO!
-			#endif
 		}
 		if(!dontDraw){
 			endBatch();

@@ -44,6 +44,10 @@ extern "C" {
 	#include "fontstash.h"
 }
 
+namespace TextAlign{
+    enum ENUM{LEFT, MIDDLE, RIGHT};
+}
+
 
 class ofxFontStash{
 
@@ -77,7 +81,7 @@ class ofxFontStash{
 		//numLines will return the number of lines this has been split in
 		ofRectangle drawMultiLineColumn( string &text, float fontSize, float x, float y,
 											float columnWidth, int &numLines, bool dontDraw = false,
-											int maxLines = 0, bool giveBackNewLinedText = false,
+                                        int maxLines = 0, bool giveBackNewLinedText = false, TextAlign::ENUM textAlign = TextAlign::LEFT,
 											bool * wordsWereTruncated = NULL );
 
 		//if the text has newlines, it will be treated as if was called into drawMultiLine()
