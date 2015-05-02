@@ -225,13 +225,15 @@ ofRectangle ofxFontStash::drawMultiLineColumn( string & text, float size, float 
 		}else{
 			linesToDraw = splitLines.size();
 		}
-
+        
+        vector<ofRectangle> lineBBoxes;
 		for(int i = 0; i < linesToDraw; i++){
             float yy = lineHeight * OFX_FONT_STASH_LINE_HEIGHT_MULT * size * i;
+            lineBBoxes.push_back(getBBox(splitLines[i], size, x, y + yy));
 #if OF_VERSION_MAJOR == 0 && OF_VERSION_MINOR >= 8
-            totalArea = totalArea.getUnion( getBBox(splitLines[i], size, x, y + yy));
+            totalArea = totalArea.getUnion(lineBBoxes[i]);
 #else
-            totalArea = getBBox(splitLines[i], size, x, y + yy); //TODO!
+            totalArea = lineBBoxes[i]; //TODO!
 #endif
         }
         for(int i = 0; i < linesToDraw; i++){
@@ -239,18 +241,22 @@ ofRectangle ofxFontStash::drawMultiLineColumn( string & text, float size, float 
 			if(!dontDraw){
 				ofPushMatrix();
 				ofTranslate(0, yy);
-                float lw = getBBox(splitLines[i], size, 0, 0).getWidth();
-                float xOffset;
-                switch(textAlign){
-                    case TextAlign::MIDDLE:
-                        xOffset = totalArea.getWidth()/2.0f-lw/2.0f;
-                        break;
-                    case TextAlign::RIGHT:
-                        xOffset = totalArea.getWidth()-lw;
-                        break;
-                    default:
-                        xOffset = 0.0;
+                
+                float xOffset = 0.0;
+                if(textAlign != TextAlign::LEFT){
+                    float lw = lineBBoxes[i].getWidth();
+                    switch(textAlign){
+                        case TextAlign::MIDDLE:
+                            xOffset = totalArea.getWidth()/2.0f-lw/2.0f;
+                            break;
+                        case TextAlign::RIGHT:
+                            xOffset = totalArea.getWidth()-lw;
+                            break;
+                        default:
+                            xOffset = 0.0;
+                    }
                 }
+                
 				drawBatch(splitLines[i], size, xOffset, 0 );
 				ofPopMatrix();
 			}
